@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Select, message } from "antd";
+import { Pagination, Select, message } from "antd";
 import { useParams } from "react-router-dom";
 import { getCategories, getProducts } from "../Store/actions/productaction";
 import Loader from "../components/layout/Loader";
@@ -12,9 +12,9 @@ const { Option } = Select;
 const HomePage = () => {
   const [current, setCurrent] = useState(1);
   const [offset, setOffset] = useState(0);
-  const [name, setName] = useState("");
-  const [limit, setLimit] = useState(30);
+  const [limit, setLimit] = useState(6);
   const [category, setCategory] = useState("Hammasi");
+  const [currentPage, setCurrentPage] = useState(1);
 
   const { loading, error, products, productCount } = useSelector(
     (state) => state.products
@@ -29,13 +29,20 @@ const HomePage = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
+    setCurrentPage((products[0]?.id - 1) / limit + 1);
+  }, [products]);
+
+  const onChange = (page) => {
+    setOffset(limit * (page - 1));
+  };
+
+  useEffect(() => {
     if (category === "Hammasi") {
       dispatch(getProducts(keyword, "", limit, offset));
     } else {
       dispatch(getProducts(keyword, category, limit, offset));
     }
     dispatch(getCategories());
-    console.log(offset);
     if (error) {
       message.error(error);
     }
@@ -108,11 +115,19 @@ const HomePage = () => {
               ) : (
                 products &&
                 products.map((product) => (
-                  <Product product={product} key={product._id} col={3} />
+                  <Product product={product} key={product.id} col={4} />
                 ))
               )}
             </div>
           </section>
+          <div className="my-5 d-flex justify-content-center">
+            <Pagination
+              current={currentPage}
+              pageSize={limit}
+              total={productCount}
+              onChange={(e) => onChange(e)}
+            />
+          </div>
         </div>
       )}
     </>
